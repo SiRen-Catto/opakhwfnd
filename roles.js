@@ -78,8 +78,29 @@ if(mainContentRoles && appFrame) {
 }
 
 function updateHeader() {
-    document.getElementById('currentName').textContent = currentRole.name;
-    document.getElementById('currentAvatar').textContent = currentRole.name.charAt(0);
+    const nameEl = document.getElementById('currentName');
+    const avatarEl = document.getElementById('currentAvatar');
+
+    if (nameEl) {
+        nameEl.textContent = currentRole.name;
+    }
+    
+    if (avatarEl) {
+        // 先默认显示名字首字母
+        avatarEl.textContent = currentRole.name.charAt(0);
+        
+        // 如果当前角色有头像，就设置为背景图片并隐藏文字
+        if (currentRole.avatarUrl) {
+            avatarEl.style.backgroundImage = `url('${currentRole.avatarUrl}')`;
+            avatarEl.style.backgroundSize = 'cover';
+            avatarEl.style.backgroundPosition = 'center';
+            avatarEl.style.color = 'transparent'; // 把首字母变成透明，隐藏起来
+        } else {
+            // 如果没有头像，就清空背景图片，显示首字母
+            avatarEl.style.backgroundImage = 'none';
+            avatarEl.style.color = ''; // 恢复文字颜色
+        }
+    }
 }
 
 function renderRoles() {
@@ -93,14 +114,14 @@ function renderRoles() {
         if(role.bannerUrl) card.style.backgroundImage = `url('${role.bannerUrl}')`;
         card.onclick = () => openEditModal(role.id);
         
-        let avatarStyle = role.avatarUrl ? `width:40px; height:40px; font-size:18px; background-image: url('${role.avatarUrl}'); background-size: cover; color: transparent;` : "width:40px; height:40px; font-size:18px;";
+        let avatarStyle = role.avatarUrl ? `width:40px; height:40px; font-size:18px; background-image: url('${role.avatarUrl}'); background-size: cover; background-position: center; color: transparent;` : "width:40px; height:40px; font-size:18px;";
         card.innerHTML = `<div class="avatar" style="${avatarStyle}">${role.name.charAt(0)}</div><div class="role-info"><h3>${role.name} <span style="font-size:10px; opacity:0.6; border:1px solid #666; padding:0 2px; border-radius:3px;">${role.pronoun}</span></h3><p>${role.identity} | ${role.desc.substring(0, 20)}${role.desc.length>20?'...':''}</p></div>`;
         listContainer.appendChild(card);
 
         const item = document.createElement('div');
         item.className = 'dropdown-item';
         item.onclick = () => { currentRole = role; updateHeader(); document.getElementById('roleDropdown').classList.remove('active'); };
-        let smallAvatarStyle = role.avatarUrl ? `width:24px; height:24px; font-size:10px; background-image: url('${role.avatarUrl}'); background-size: cover; color: transparent;` : "width:24px; height:24px; font-size:10px;";
+        let smallAvatarStyle = role.avatarUrl ? `width:24px; height:24px; font-size:10px; background-image: url('${role.avatarUrl}'); background-size: cover; background-position: center; color: transparent;` : "width:24px; height:24px; font-size:10px;";
         item.innerHTML = `<div class="avatar" style="${smallAvatarStyle}">${role.name.charAt(0)}</div><span>${role.name}</span>`;
         dropdownContainer.appendChild(item);
     });

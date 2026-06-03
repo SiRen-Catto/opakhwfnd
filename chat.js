@@ -9,15 +9,15 @@ if(mainContentChat) {
                 </div>
                 <div class="chat-bubble sent">
                     wha
-                    <div class="chat-time">10:25 AM</div>
+                    <div class="chat-time">14:25 AM</div>
                 </div>
                 <div class="chat-bubble received">
                     ?
-                    <div class="chat-time">10:40 AM</div>
+                    <div class="chat-time">14:40 AM</div>
                 </div>
                 <div class="chat-bubble received">
                     what the fuck u mean wha??
-                    <div class="chat-time">10:40 AM</div>
+                    <div class="chat-time">14:40 AM</div>
                 </div>
             </div>
         </div>
