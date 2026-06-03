@@ -91,8 +91,21 @@
             transition: transform 0.2s;
             -webkit-text-stroke: 1px #5d5d5d; /* 1像素黑色描边 */
         }
-        
+
         .star-btn:hover {
+            transform: scale(1.2) rotate(15deg);
+        }
+            
+        .calendar-btn {
+            color: #3e3e3e; /* 日历图标 */
+            font-size: 16px;
+            cursor: pointer;
+            padding: 5px;
+            transition: transform 0.2s;
+            -webkit-text-stroke: 1px #5d5d5d; /* 1像素灰色描边 */
+        }
+
+        .calendar-btn:hover {
             transform: scale(1.2) rotate(15deg);
         }
     `;
@@ -113,6 +126,7 @@
                 <span class="author-role">Created by SiRen</span>
             </div>
             <i class="fas fa-star star-btn" id="tutorialBtn" title="打开教程"></i>
+            <i class="fas fa-calendar calendar-btn" id="calendarBtn" title="回到WindowSR"></i>
         `;
         
         // 创建挂坠
@@ -130,6 +144,7 @@
 
         // 3. 绑定事件逻辑
         const tutorialBtn = document.getElementById('tutorialBtn');
+        const calendarBtn = document.getElementById('calendarBtn');
         
         // 点击星星：打开教程
         tutorialBtn.addEventListener('click', (e) => {
@@ -138,6 +153,12 @@
                 window.SRTutorial.show();
                 card.classList.remove('show'); // 打开教程时收起牌子
             }
+        });
+
+        // 点击日历按钮
+        calendarBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // 防止冒泡触发其他点击
+            window.location.href = '../index.html'; // 返回WindowSR页面
         });
 
         // 点击爱心挂坠
