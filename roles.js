@@ -11,7 +11,18 @@ try {
 
 if(roles.length === 0) roles = defaultRoles;
 let currentRole = roles[0];
+
+// 读取当前角色
+try {
+    const savedCurrentId = localStorage.getItem('mono_planner_current_role_id');
+    if (savedCurrentId) {
+        const found = roles.find(r => r.id.toString() === savedCurrentId);
+        if (found) currentRole = found;
+    }
+} catch(e) {}
+
 let editingRoleId = null;
+
 let tempAvatar = "";
 let tempBanner = "";
 let activeImageTarget = "";
@@ -80,7 +91,7 @@ if(mainContentRoles && appFrame) {
 function updateHeader() {
     const nameEl = document.getElementById('currentName');
     const avatarEl = document.getElementById('currentAvatar');
-
+    const headerEl = document.querySelector('header'); // 获取头部元素
     if (nameEl) {
         nameEl.textContent = currentRole.name;
     }
@@ -99,6 +110,20 @@ function updateHeader() {
             // 如果没有头像，就清空背景图片，显示首字母
             avatarEl.style.backgroundImage = 'none';
             avatarEl.style.color = ''; // 恢复文字颜色
+        }
+    }
+
+    // 头部的渐变背景图
+    if (headerEl) {
+        if (currentRole.bannerUrl) {
+            // 从左到右渐变：左侧透明度低(0.1，透出图片)，右侧透明度高(0.95，变暗)
+            headerEl.style.background = `linear-gradient(to right, rgba(26, 26, 26, 0.3) 0%, rgba(12, 12, 12, 0.95) 100%), url('${currentRole.bannerUrl}')`;
+            headerEl.style.backgroundSize = 'cover';
+            headerEl.style.backgroundPosition = 'center';
+        } else {
+            // 如果没有设置背景图，恢复默认色
+            headerEl.style.background = 'rgba(26, 26, 26, 0.9)';
+            headerEl.style.backgroundImage = 'none';
         }
     }
 }
@@ -120,7 +145,13 @@ function renderRoles() {
 
         const item = document.createElement('div');
         item.className = 'dropdown-item';
-        item.onclick = () => { currentRole = role; updateHeader(); document.getElementById('roleDropdown').classList.remove('active'); };
+        item.onclick = () => { 
+            currentRole = role; 
+            updateHeader(); 
+            document.getElementById('roleDropdown').classList.remove('active'); 
+            try { localStorage.setItem('mono_planner_current_role_id', role.id); } catch(e) {}
+        };
+
         let smallAvatarStyle = role.avatarUrl ? `width:24px; height:24px; font-size:10px; background-image: url('${role.avatarUrl}'); background-size: cover; background-position: center; color: transparent;` : "width:24px; height:24px; font-size:10px;";
         item.innerHTML = `<div class="avatar" style="${smallAvatarStyle}">${role.name.charAt(0)}</div><span>${role.name}</span>`;
         dropdownContainer.appendChild(item);
@@ -189,7 +220,11 @@ function deleteCurrentRole() {
     if(!editingRoleId) return;
     if(confirm("Delete this role? This cannot be undone.")) {
         roles = roles.filter(r => r.id !== editingRoleId);
-        if(currentRole.id === editingRoleId) { currentRole = roles.length > 0 ? roles[0] : null; if(currentRole) updateHeader(); }
+        if(currentRole.id === editingRoleId) { 
+            currentRole = roles.length > 0 ? roles[0] : null; 
+            if(currentRole) updateHeader(); 
+            try { localStorage.setItem('mono_planner_current_role_id', currentRole.id); } catch(e) {}
+        }
         saveToLocal(); renderRoles(); closeEditModal();
     }
 }

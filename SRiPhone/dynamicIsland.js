@@ -2,7 +2,7 @@
     const css = `
         .notch-container {
             position: absolute;
-            top: 15px;
+            top: 8px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 9000;
