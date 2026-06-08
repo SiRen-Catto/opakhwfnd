@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <!-- default(白色), black(黑色), black-translucent(透明沉浸式) -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="NoteSRi">
+    <meta name="theme-color" content="#050505">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>phone</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap');
+
+        /* Combined CSS Variables */
+        :root {
+            --bg-outer: #000000;
+            --phone-frame: #141414; 
+            --screen-bg: #ededed;
+            --text-main: #111111;
+            --text-muted: #999999;
+            --app-bg: #ffffff;
+            --app-shadow: rgba(0, 0, 0, 0.04);
+            --border-color: #e5e5e5;
+            --island-bg: #000000;
+            --island-text: #ffffff;
+            --overlay-bg: rgba(242, 242, 242, 0.75);
+        }
+
+        body.dark-mode {
+            --phone-frame: #050505;
+            --screen-bg: #000000;
+            --text-main: #eeeeee;
+            --text-muted: #666666;
+            --app-bg: #1e1e1e;
+            --app-shadow: rgba(0, 0, 0, 0.3);
+            --border-color: #2a2a2a;
+            --island-bg: #ffffff;
+            --island-text: #000000;
+            --overlay-bg: rgba(18, 18, 18, 0.75);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-outer);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            transition: background-color 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        /* Phone Container */
+        .phone {
+            width: 320px;
+            height: 680px;
+            background-color: var(--phone-frame);
+            border-radius: 48px;
+            padding: 12px; 
+            box-shadow: 0 40px 80px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.1);
+            position: relative;
+            transition: all 0.6s ease;
+        }
+
+        /* Screen Wrapper */
+        .screen {
+            width: 100%;
+            height: 100%;
+            background-color: var(--screen-bg);
+            border-radius: 36px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            transform: translateZ(0); 
+            transition: background-color 0.6s ease;
+        }
+
+        .phone-inner {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        /* Dynamic Island */
+        .dynamic-island {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90px;
+            height: 28px;
+            background-color: var(--island-bg);
+            border-radius: 20px;
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .dynamic-island.notify {
+            width: 160px;
+            height: 34px;
+        }
+
+        .island-text {
+            color: var(--island-text);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            opacity: 0;
+            white-space: nowrap;
+            transition: opacity 0.3s;
+        }
+
+        .dynamic-island.notify .island-text {
+            opacity: 1;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 16px 22px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-main);
+            letter-spacing: 0.5px;
+            z-index: 5;
+            transition: color 0.6s ease;
+        }
+
+        /* Widgets Area */
+        .widgets {
+            padding: 20px 22px 10px;
+        }
+
+        .date-widget { margin-bottom: 25px; }
+
+        .date-widget h1 {
+            font-size: 38px;
+            font-weight: 200;
+            color: var(--text-main);
+            letter-spacing: -2px;
+            transition: color 0.6s ease;
+        }
+
+        .date-widget p {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 6px;
+            font-weight: 400;
+        }
+
+        .quote-widget {
+            background-color: var(--app-bg);
+            border-radius: 20px;
+            padding: 24px 20px;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: 0 4px 12px var(--app-shadow);
+            transition: all 0.3s ease;
+        }
+        .quote-widget:active { transform: scale(0.97); }
+
+        .quote-widget p {
+            font-size: 14px;
+            color: var(--text-main);
+            font-style: italic;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+            line-height: 1.4;
+            transition: opacity 0.4s ease, color 0.6s ease;
+        }
+
+        .quote-widget span {
+            display: block;
+            font-size: 9px;
+            color: var(--text-muted);
+            margin-top: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        /* App Grid */
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            padding: 20px 22px;
+            margin-top: auto;
+            margin-bottom: 5px;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
+        .app {
+            width: 52px;
+            height: 52px;
+            background-color: var(--app-bg);
+            border-radius: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 12px var(--app-shadow);
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .app-container:active .app {
+            transform: scale(0.85);
+        }
+
+        .app-label {
+            font-size: 10px;
+            color: var(--text-main);
+            letter-spacing: 0.3px;
+            opacity: 0.8;
+            font-weight: 500;
+            transition: color 0.6s ease;
+        }
+
+        /* --- PURE CSS ICONS --- */
+        .icon { position: relative; display: flex; justify-content: center; align-items: center; }
+
+        .ic-wthr { width: 22px; height: 10px; background: var(--text-main); border-radius: 10px; margin-top: 8px; }
+        .ic-wthr::before { content: ''; position: absolute; top: -7px; left: 2px; width: 12px; height: 12px; background: var(--text-main); border-radius: 50%; }
+        .ic-wthr::after { content: ''; position: absolute; top: -12px; right: -2px; width: 10px; height: 10px; border: 2px solid var(--text-main); border-radius: 50%; background: var(--app-bg); }
+
+        .ic-cmra { width: 24px; height: 16px; border: 2px solid var(--text-main); border-radius: 4px; }
+        .ic-cmra::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 6px; height: 6px; border: 2px solid var(--text-main); border-radius: 50%; }
+        .ic-cmra::after { content: ''; position: absolute; top: -4px; left: 4px; width: 4px; height: 2px; background: var(--text-main); }
+
+        .ic-note { width: 18px; height: 22px; border: 2px solid var(--text-main); border-radius: 3px; display: flex; flex-direction: column; justify-content: space-evenly; padding: 2px; }
+        .ic-note span { display: block; height: 2px; background: var(--text-main); width: 100%; border-radius: 1px; }
+        .ic-note span:last-child { width: 60%; }
+
+        /* Settings (Sliders) */
+        .ic-settings { display: flex; flex-direction: column; gap: 4px; width: 24px; }
+        .ic-settings-line { width: 100%; height: 2px; background: var(--text-main); position: relative; }
+        .ic-settings-line::after { content: ''; position: absolute; top: -2px; width: 6px; height: 6px; background: var(--text-main); border-radius: 50%; }
+        .ic-settings-line:nth-child(1)::after { left: 4px; }
+        .ic-settings-line:nth-child(2)::after { right: 4px; }
+        .ic-settings-line:nth-child(3)::after { left: 10px; }
+
+        /* Photos */
+        .ic-photos { width: 24px; height: 24px; border: 2px solid var(--text-main); position: relative; overflow: hidden; border-radius: 3px; }
+        .ic-photos::before { content: ''; position: absolute; bottom: -5px; left: -5px; width: 16px; height: 16px; border: 2px solid var(--text-main); transform: rotate(45deg); }
+        .ic-photos::after { content: ''; position: absolute; top: 3px; right: 3px; width: 4px; height: 4px; background: var(--text-main); border-radius: 50%; }
+
+        /* Music */
+        .ic-music { width: 24px; height: 24px; border: 2px solid var(--text-main); border-radius: 50%; display: flex; justify-content: center; align-items: center; }
+        .ic-music::after { content: ''; border-width: 5px 0 5px 8px; border-style: solid; border-color: transparent transparent transparent var(--text-main); margin-left: 2px; }
+
+        /* Map */
+        .ic-map { width: 24px; height: 24px; border: 2px solid var(--text-main); border-radius: 4px; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        .ic-map::before { content: ''; position: absolute; width: 2px; height: 120%; background: var(--text-main); transform: rotate(25deg); }
+        .ic-map::after { content: ''; position: absolute; width: 120%; height: 2px; background: var(--text-main); transform: rotate(-25deg); }
+
+        /* Shopping */
+        .ic-shop { width: 20px; height: 18px; border: 2px solid var(--text-main); border-radius: 2px 2px 6px 6px; position: relative; margin-top: 4px; }
+        .ic-shop::before { content: ''; position: absolute; top: -8px; left: 3px; width: 10px; height: 10px; border: 2px solid var(--text-main); border-radius: 50%; border-bottom: none; }
+
+        /* Dock Icons */
+        .ic-call { width: 18px; height: 18px; border: 2px solid var(--text-main); border-radius: 6px; }
+        .ic-call::before { content: ''; position: absolute; inset: 2px; border: 2px solid var(--text-main); border-radius: 2px; }
+        
+        .ic-msg { width: 20px; height: 15px; border: 2px solid var(--text-main); border-radius: 5px; }
+        .ic-msg::after { content: ''; position: absolute; bottom: -5px; left: 4px; border-width: 5px 5px 0 0; border-style: solid; border-color: var(--text-main) transparent transparent transparent; }
+
+        .ic-web { width: 22px; height: 22px; border: 2px solid var(--text-main); border-radius: 50%; }
+        .ic-web::before { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: var(--text-main); transform: translateY(-50%); }
+        .ic-web::after { content: ''; position: absolute; top: 0; left: 50%; width: 8px; height: 100%; border: 2px solid var(--text-main); border-radius: 50%; transform: translateX(-50%); }
+
+        /* Dock */
+        .dock-container { padding: 0 15px 25px 15px; }
+        .dock {
+            height: 70px;
+            background-color: var(--overlay-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 24px;
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center;
+            padding: 0 10px;
+            border: 1px solid rgba(128,128,128,0.1);
+        }
+        .dock .app { border-radius: 50%; box-shadow: none; background: transparent; }
+        .dock .app-label { display: none; }
+
+        /* Camera Flash Effect */
+        .flash {
+            position: absolute; inset: 0;
+            background-color: #fff; opacity: 0;
+            pointer-events: none; z-index: 100;
+        }
+
+        /* Modals (Glassmorphism) */
+        .modal {
+            position: absolute; inset: 0;
+            background-color: var(--overlay-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 50;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transform: translateY(20px) scale(0.95);
+        }
+        .modal.active { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+
+        .modal-close {
+            position: absolute; bottom: 40px;
+            width: 40px; height: 4px;
+            background: var(--text-muted);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Weather Modal */
+        .weather-text { font-size: 50px; font-weight: 200; color: var(--text-main); letter-spacing: -2px; }
+        .weather-sub { font-size: 12px; color: var(--text-muted); margin-top: 5px; letter-spacing: 1px; }
+
+        /* Notes Modal */
+        textarea {
+            width: 85%; height: 60%;
+            background: transparent; border: none;
+            color: var(--text-main); font-family: inherit;
+            font-size: 16px; line-height: 1.5;
+            resize: none; outline: none; padding: 20px;
+        }
+        textarea::placeholder { color: var(--text-muted); opacity: 0.5; }
+
+        /* Home Indicator */
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 110px;
+            height: 3px;
+            background-color: var(--text-main);
+            border-radius: 3px;
+            opacity: 0.2;
+            transition: background-color 0.6s ease;
+            z-index: 10;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="phone" id="phone">
+        <div class="screen" id="screen">
+            
+            <div class="flash" id="flash"></div>
+
+            <div class="dynamic-island" id="island">
+                <span class="island-text" id="island-text">notification</span>
+            </div>
+
+            <div class="phone-inner" id="phone-inner">
+                <!-- Status Bar -->
+                <div class="status-bar">
+                    <span id="clock">00:00</span>
+                    <span id="network-status" style="opacity: 0.8; cursor: pointer;" onclick="toggleStatus()">online</span>
+                </div>
+
+                <!-- Widgets -->
+                <div class="widgets">
+                    <div class="date-widget">
+                        <h1 id="day-name">monday</h1>
+                        <p id="full-date">jan 01</p>
+                    </div>
+
+                    <div class="quote-widget" onclick="changeQuote()">
+                        <p id="quote-text">"less is more."</p>
+                        <span>tap to refresh</span>
+                    </div>
+                </div>
+
+                <!-- App Grid -->
+                <div class="app-grid">
+                    <div class="app-container" onclick="openWeather()">
+                        <div class="app"><div class="icon ic-wthr"></div></div>
+                        <span class="app-label">weather</span>
+                    </div>
+                    
+                    <div class="app-container" onclick="triggerCamera()">
+                        <div class="app"><div class="icon ic-cmra"></div></div>
+                        <span class="app-label">camera</span>
+                    </div>
+
+                    <div class="app-container" onclick="openModal('notes-modal')">
+                        <div class="app"><div class="icon ic-note"><span></span><span></span><span></span></div></div>
+                        <span class="app-label">diary</span>
+                    </div>
+
+                    <div class="app-container" onclick="toggleTheme()">
+                        <div class="app">
+                            <div class="icon">
+                                <div class="ic-settings">
+                                    <div class="ic-settings-line"></div>
+                                    <div class="ic-settings-line"></div>
+                                    <div class="ic-settings-line"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="app-label">settings</span>
+                    </div>
+                    
+                    <div class="app-container" onclick="notify('photos opened')">
+                        <div class="app"><div class="icon ic-photos"></div></div>
+                        <span class="app-label">photos</span>
+                    </div>
+
+                    <div class="app-container" onclick="notify('music playing')">
+                        <div class="app"><div class="icon ic-music"></div></div>
+                        <span class="app-label">music</span>
+                    </div>
+
+                    <div class="app-container" onclick="notify('map opened')">
+                        <div class="app"><div class="icon ic-map"></div></div>
+                        <span class="app-label">map</span>
+                    </div>
+
+                    <div class="app-container" onclick="notify('shopping opened')">
+                        <div class="app"><div class="icon ic-shop"></div></div>
+                        <span class="app-label">shopping</span>
+                    </div>
+                </div>
+
+                <!-- Dock -->
+                <div class="dock-container">
+                    <div class="dock">
+                        <div class="app-container" onclick="notify('calling...')">
+                            <div class="app"><div class="icon ic-call"></div></div>
+                        </div>
+                        <div class="app-container" onclick="notify('no new messages')">
+                            <div class="app"><div class="icon ic-msg"></div></div>
+                        </div>
+                        <div class="app-container" onclick="notify('browser opened')">
+                            <div class="app"><div class="icon ic-web"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Home Indicator -->
+                <div class="home-indicator"></div>
+            </div>
+
+            <!-- Weather Modal -->
+            <div class="modal" id="weather-modal">
+                <div class="weather-text" id="w-temp">--°C</div>
+                <div class="weather-sub" id="w-desc">loading...</div>
+                <div class="modal-close" onclick="closeModal('weather-modal')"></div>
+            </div>
+
+            <!-- Diary Modal -->
+            <div class="modal" id="notes-modal">
+                <textarea id="note-area" placeholder="dear diary..."></textarea>
+                <div class="modal-close" onclick="closeModal('notes-modal')"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Real-time Clock & Date
+        function updateTime() {
+            const now = new Date();
+            
+            let hours = now.getHours().toString().padStart(2, '0');
+            let minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}`;
+
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+            
+            document.getElementById('day-name').textContent = days[now.getDay()];
+            document.getElementById('full-date').textContent = `${months[now.getMonth()]} ${now.getDate().toString().padStart(2, '0')}`;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // 2. Dynamic Island Notification
+        let islandTimer;
+        function notify(text) {
+            const island = document.getElementById('island');
+            const islandText = document.getElementById('island-text');
+            
+            islandText.textContent = text;
+            island.classList.add('notify');
+            
+            clearTimeout(islandTimer);
+            islandTimer = setTimeout(() => {
+                island.classList.remove('notify');
+            }, 2000);
+        }
+
+        // 3. Interactive Quote Widget
+        const quotes = [
+            "less is more.",
+            "breathe.",
+            "stay present.",
+            "focus on now.",
+            "keep it simple.",
+            "embrace silence.",
+            "let it go."
+        ];
+
+        function changeQuote() {
+            const quoteEl = document.getElementById('quote-text');
+            let currentQuote = quoteEl.textContent.replace(/"/g, '');
+            let newQuote;
+            do {
+                newQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            } while (newQuote === currentQuote); 
+            
+            quoteEl.style.opacity = 0;
+            notify('quote updated'); 
+            
+            setTimeout(() => {
+                quoteEl.textContent = `"${newQuote}"`;
+                quoteEl.style.opacity = 1;
+            }, 400);
+        }
+
+        // 4. Camera Effect (Flash + slight physical press effect)
+        function triggerCamera() {
+            const flash = document.getElementById('flash');
+            const inner = document.getElementById('phone-inner');
+            
+            inner.style.transform = 'scale(0.98)';
+            setTimeout(() => inner.style.transform = 'scale(1)', 150);
+
+            flash.style.transition = 'none';
+            flash.style.opacity = '1';
+            setTimeout(() => {
+                flash.style.transition = 'opacity 0.6s ease-out';
+                flash.style.opacity = '0';
+            }, 50);
+
+            notify('photo saved');
+        }
+
+        // 5. Dark Mode Toggle
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            notify(isDark ? 'dark mode on' : 'light mode on');
+        }
+
+        // 6. Random Weather Logic
+        const weatherData = [
+            { t: '18°C', d: 'cloudy / tokyo' },
+            { t: '24°C', d: 'sunny / los angeles' },
+            { t: '12°C', d: 'rainy / london' },
+            { t: '-2°C', d: 'snow / oslo' },
+            { t: '31°C', d: 'clear / dubai' }
+        ];
+        function openWeather() {
+            const random = weatherData[Math.floor(Math.random() * weatherData.length)];
+            document.getElementById('w-temp').textContent = random.t;
+            document.getElementById('w-desc').textContent = random.d;
+            openModal('weather-modal');
+        }
+
+        // 7. Diary Logic (Local Storage)
+        const noteArea = document.getElementById('note-area');
+        noteArea.value = localStorage.getItem('minOS_diary') || '';
+        noteArea.addEventListener('input', (e) => {
+            localStorage.setItem('minOS_diary', e.target.value);
+        });
+
+        // 8. Modal Open/Close
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // 9. Network Status Toggle
+        let statuses = ['online', 'offline', 'busy'];
+        let statusIdx = 0;
+        function toggleStatus() {
+            statusIdx = (statusIdx + 1) % statuses.length;
+            document.getElementById('network-status').textContent = statuses[statusIdx];
+            notify('status: ' + statuses[statusIdx]);
+        }
+    </script>
+</body>
+</html>

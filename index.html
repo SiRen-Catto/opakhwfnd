@@ -27,6 +27,15 @@
         </header>
         
         <div class="phone-container"></div>
+        <!-- 修改这里：将 phone-container 作为一个全屏 iframe 容器 -->
+        <div class="phone-container" id="phone-container" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background-color: #e6e6e6;">
+            <!-- 返回按钮 -->
+            <button onclick="closeSRiPhone()" style="position: absolute; top: 20px; left: 20px; z-index: 10000; padding: 8px 16px; border-radius: 20px; border: none; background: rgba(0,0,0,0.25); color: #fff; cursor: pointer; backdrop-filter: blur(10px); display: flex; align-items: center; gap: 6px; font-size: 14px;">
+                <i class="fas fa-arrow-left"></i> 返回
+            </button>
+            <iframe id="phone-iframe" src="" style="width: 100%; height: 100%; border: none; display: block;"></iframe>
+        </div>
+
         <!-- 所有的页面内容将由外部JS动态注入到这里 -->
         <main id="main-content"></main>
 
@@ -58,18 +67,25 @@
     </div>
 
     <script>
-        // 全局页面切换及功能
-        function switchPage(pageId, btn) {
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            if(btn) btn.classList.add('active');
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            const target = document.getElementById(pageId);
-            if(target) target.classList.add('active');
-        }
-
+        // 修改：在当前页面通过 iframe 弹窗打开 phone.html
         function openSRiPhone() {
             document.getElementById('loading-overlay').classList.add('active');
-            setTimeout(() => { window.location.href = 'SRiPhone/phone.html'; }, 1500);
+            setTimeout(() => { 
+                document.getElementById('loading-overlay').classList.remove('active');
+                
+                // 显示手机容器
+                document.getElementById('phone-container').style.display = 'block';
+                
+                // 仅在首次打开时加载 iframe，避免每次打开都重新刷新手机状态
+                const iframe = document.getElementById('phone-iframe');
+                if (!iframe.src.includes('phone.html')) {
+                    iframe.src = 'phone.html';
+                }
+            }, 1500);
+        }
+        // 新增：关闭手机弹窗功能
+        function closeSRiPhone() {
+            document.getElementById('phone-container').style.display = 'none';
         }
     </script>
     
@@ -81,6 +97,6 @@
     <script src="more.js"></script>
     <script src="tutorial.js"></script>
     <script src="pendant.js"></script>
-    <script src="SRiPhone/dynamicIsland.js"></script> 
+    <script src="dynamicIsland.js"></script> 
 </body>
 </html>

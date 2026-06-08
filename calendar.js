@@ -2,9 +2,9 @@ const mainContent = document.getElementById('main-content');
 const STORAGE_KEY_MEMOS = 'notesri_memos';
 
 // 状态管理
-let currentView = 'mid'; // long (year), mid (month), short (day)
-let selectedDate = new Date(); // 当前选中的基准时间
-let activeSelectDate = new Date(); // 用户点击选中的具体格子时间
+let currentView = 'mid'; 
+let selectedDate = new Date(); 
+let activeSelectDate = new Date(); 
 let memos = JSON.parse(localStorage.getItem(STORAGE_KEY_MEMOS)) || [];
 let editingMemoId = null;
 
@@ -15,7 +15,7 @@ if(mainContent) {
     const html = `
         <div class="page active" id="page-calendar">
             <div class="calendar-tabs">
-                <h2 style="font-weight: normal; margin: 0; font-size: 24px;" id="calendarTitle"></h2>
+                <h2 style="font-weight: normal; margin: 0;" id="calendarTitle"></h2>
                 <div class="calendar-tabs-right">
                     <div class="tab" id="tab-long" onclick="switchPlan('long')">Year</div>
                     <div class="tab active" id="tab-mid" onclick="switchPlan('mid')">Month</div>
@@ -23,18 +23,20 @@ if(mainContent) {
                 </div>
             </div>
             
-            <div id="calendarDisplayArea"></div>
-            
-            <div class="calendar-nav" id="calendarNav">
-                <span onclick="navigate(-1)">&#10094;</span>
-                <span class="nav-title" id="navTitle" onclick="jumpToCurrent()"></span>
-                <span onclick="navigate(1)">&#10095;</span>
-            </div>
+            <!-- 淡入淡出动画容器 -->
+            <div id="calendar-content-wrapper" style="transition: opacity 0.15s ease-in-out; flex: 1; display: flex; flex-direction: column; overflow: hidden; opacity: 1;">
+                <div id="calendarDisplayArea"></div>
+                
+                <div class="calendar-nav" id="calendarNav">
+                    <span onclick="navigate(-1)">&#10094;</span>
+                    <span class="nav-title" id="navTitle" onclick="jumpToCurrent()"></span>
+                    <span onclick="navigate(1)">&#10095;</span>
+                </div>
 
-            <div class="memo-list" id="memoListArea"></div>
+                <div class="memo-list" id="memoListArea"></div>
+            </div>
         </div>
 
-        <!-- 添加/编辑 Memo 的弹窗 -->
         <div class="memo-modal" id="memoModal">
             <div class="memo-modal-card">
                 <div class="memo-modal-header">
@@ -62,7 +64,40 @@ if(mainContent) {
     renderView();
 }
 
-// 核心渲染逻辑
+// 触发淡入淡出动画的包裹函数
+function triggerFade(callback) {
+    const wrapper = document.getElementById('calendar-content-wrapper');
+    if(!wrapper) return callback();
+    wrapper.style.opacity = '0.8'; 
+    setTimeout(() => {
+        callback(); // 执行DOM更新
+        wrapper.style.opacity = '1'; // 淡入
+    }, 150); // 150ms 的丝滑过渡
+}
+
+function switchPlan(type) {
+    if(currentView === type) return;
+    currentView = type;
+    triggerFade(renderView);
+}
+
+function navigate(dir) {
+    triggerFade(() => {
+        if(currentView === 'long') selectedDate.setFullYear(selectedDate.getFullYear() + dir);
+        else if(currentView === 'mid') selectedDate.setMonth(selectedDate.getMonth() + dir);
+        else if(currentView === 'short') selectedDate.setDate(selectedDate.getDate() + (dir * 7));
+        renderView();
+    });
+}
+
+function jumpToCurrent() {
+    triggerFade(() => {
+        selectedDate = new Date();
+        activeSelectDate = new Date();
+        renderView();
+    });
+}
+
 function renderView() {
     document.querySelectorAll('.calendar-tabs-right .tab').forEach(t => t.classList.remove('active'));
     document.getElementById(`tab-${currentView}`).classList.add('active');
@@ -87,36 +122,15 @@ function renderView() {
     renderMemoList();
 }
 
-function switchPlan(type) {
-    currentView = type;
-    renderView();
-}
-
-function navigate(dir) {
-    if(currentView === 'long') selectedDate.setFullYear(selectedDate.getFullYear() + dir);
-    else if(currentView === 'mid') selectedDate.setMonth(selectedDate.getMonth() + dir);
-    else if(currentView === 'short') selectedDate.setDate(selectedDate.getDate() + (dir * 7));
-    renderView();
-}
-
-function jumpToCurrent() {
-    selectedDate = new Date();
-    activeSelectDate = new Date();
-    renderView();
-}
-
-// 获取某一天的最高级颜色，如果没有未完成的memo则返回0
 function getHighestPriorityColor(dateStr, type) {
     const dayMemos = memos.filter(m => m.dateKey === dateStr && m.type === type && !m.completed);
     if(dayMemos.length === 0) return 0;
     return Math.max(...dayMemos.map(m => m.color));
 }
 
-// 格式化日期 key
 function getMonthKey(year, month) { return `${year}-${String(month+1).padStart(2, '0')}`; }
 function getDayKey(year, month, day) { return `${year}-${String(month+1).padStart(2, '0')}-${String(day).padStart(2, '0')}`; }
 
-// 渲染年视图
 function renderYearGrid(container) {
     container.innerHTML = `<div class="year-grid" id="yearGrid"></div>`;
     const grid = document.getElementById('yearGrid');
@@ -131,8 +145,7 @@ function renderYearGrid(container) {
         
         cell.textContent = monthNames[i];
         
-        const mKey = getMonthKey(year, i);
-        const color = getHighestPriorityColor(mKey, 'month');
+        const color = getHighestPriorityColor(getMonthKey(year, i), 'month');
         if(color > 0) {
             const dot = document.createElement('div');
             dot.className = `day-dot dot-${color}`;
@@ -144,7 +157,6 @@ function renderYearGrid(container) {
     }
 }
 
-// 渲染月视图
 function renderMonthGrid(container) {
     container.innerHTML = `
         <div class="calendar-grid" id="monthGrid">
@@ -171,8 +183,7 @@ function renderMonthGrid(container) {
         if (year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) cell.classList.add('today');
         if (year === activeSelectDate.getFullYear() && month === activeSelectDate.getMonth() && i === activeSelectDate.getDate()) cell.classList.add('selected');
         
-        const dKey = getDayKey(year, month, i);
-        const color = getHighestPriorityColor(dKey, 'day');
+        const color = getHighestPriorityColor(getDayKey(year, month, i), 'day');
         if(color > 0) {
             const dot = document.createElement('div');
             dot.className = `day-dot dot-${color}`;
@@ -184,7 +195,6 @@ function renderMonthGrid(container) {
     }
 }
 
-// 渲染周视图 (Day)
 function renderWeekGrid(container) {
     container.innerHTML = `
         <div class="calendar-grid" id="weekGrid">
@@ -194,7 +204,6 @@ function renderWeekGrid(container) {
     const grid = document.getElementById('weekGrid');
     const today = new Date();
     
-    // 找到当前选中日期所在周的周日
     const startOfWeek = new Date(selectedDate);
     startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
     
@@ -209,8 +218,7 @@ function renderWeekGrid(container) {
         if (curr.getFullYear() === today.getFullYear() && curr.getMonth() === today.getMonth() && curr.getDate() === today.getDate()) cell.classList.add('today');
         if (curr.getFullYear() === activeSelectDate.getFullYear() && curr.getMonth() === activeSelectDate.getMonth() && curr.getDate() === activeSelectDate.getDate()) cell.classList.add('selected');
         
-        const dKey = getDayKey(curr.getFullYear(), curr.getMonth(), curr.getDate());
-        const color = getHighestPriorityColor(dKey, 'day');
+        const color = getHighestPriorityColor(getDayKey(curr.getFullYear(), curr.getMonth(), curr.getDate()), 'day');
         if(color > 0) {
             const dot = document.createElement('div');
             dot.className = `day-dot dot-${color}`;
@@ -222,7 +230,6 @@ function renderWeekGrid(container) {
     }
 }
 
-// 处理格子点击
 function handleCellClick(date, type) {
     const isSame = (type === 'month') ? 
         (activeSelectDate.getFullYear() === date.getFullYear() && activeSelectDate.getMonth() === date.getMonth()) :
@@ -232,30 +239,25 @@ function handleCellClick(date, type) {
     selectedDate = date;
 
     if(isSame) {
-        // 再次点击，打开添加弹窗
         openMemoModal(null);
     } else {
-        renderView();
+        renderView(); // 仅更新状态，不触发整体淡入淡出，保持点选的清爽感
     }
 }
 
-// 渲染 Memo 列表
 function renderMemoList() {
     const listArea = document.getElementById('memoListArea');
     listArea.innerHTML = '';
     
     let targetMemos = [];
     if(currentView === 'long') {
-        // Year: 显示这一年所有月份的大目标
         targetMemos = memos.filter(m => m.type === 'month' && m.dateKey.startsWith(selectedDate.getFullYear().toString()));
         targetMemos.sort((a, b) => a.dateKey.localeCompare(b.dateKey) || b.color - a.color);
     } else if(currentView === 'mid') {
-         // Month: 显示选中当天的memo
         const dKey = getDayKey(activeSelectDate.getFullYear(), activeSelectDate.getMonth(), activeSelectDate.getDate());
         targetMemos = memos.filter(m => m.type === 'day' && m.dateKey === dKey);
         targetMemos.sort((a, b) => b.color - a.color);
     } else {
-        // Day: 显示本周所有的memo
         const startOfWeek = new Date(selectedDate);
         startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
         const endOfWeek = new Date(startOfWeek);
@@ -277,15 +279,12 @@ function renderMemoList() {
         const item = document.createElement('div');
         item.className = `memo-item ${memo.completed ? 'checked' : ''}`;
         
-        // 标题区
-        const header = document.createElement('div');
-        header.className = 'memo-header';
-        
-        // 如果是Year或Day视图，显示一下具体日期前缀
         let prefix = '';
         if(currentView === 'long') prefix = `[${memo.dateKey.split('-')[1]}月] `;
         if(currentView === 'short') prefix = `[${memo.dateKey.substring(5)}] `;
 
+        const header = document.createElement('div');
+        header.className = 'memo-header';
         header.innerHTML = `
             <div class="memo-title-area" onclick="toggleMemo('${memo.id}')">
                 <div class="checkbox"></div>
@@ -298,7 +297,6 @@ function renderMemoList() {
         `;
         item.appendChild(header);
 
-        // 子项区
         if(memo.subItems && memo.subItems.length > 0) {
             memo.subItems.forEach(sub => {
                 const subEl = document.createElement('div');
@@ -315,7 +313,6 @@ function renderMemoList() {
     });
 }
 
-// 交互逻辑
 function toggleMemo(id) {
     const m = memos.find(x => x.id === id);
     if(m) { m.completed = !m.completed; saveMemos(); renderView(); }
@@ -336,7 +333,6 @@ function deleteMemo(id) {
     }
 }
 
-// 弹窗逻辑
 let selectedColor = 1;
 
 function openMemoModal(id) {
@@ -397,7 +393,6 @@ function saveMemo() {
     if(editingMemoId) {
         const m = memos.find(x => x.id === editingMemoId);
         m.title = title; m.color = selectedColor; 
-        // 简单处理：覆盖子项，保留已完成状态如果文字相同
         m.subItems = subs; 
     } else {
         memos.push({
